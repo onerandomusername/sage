@@ -33,5 +33,4 @@ async def root() -> str:
 # and a prefix on the non-root router
 # this means we currently serve meta from both `/` and `/api`
 prefix = "/api"
-app.include_router(meta.router)
 app.include_router(meta.router, prefix=prefix)
