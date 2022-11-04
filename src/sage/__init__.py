@@ -1,8 +1,8 @@
 """Sage."""
-from typing import Any, TypedDict
 
-from fastapi import FastAPI, Request
-from pydantic import BaseModel, HttpUrl
+from fastapi import FastAPI
+
+from sage.endpoints import root
 
 
 app = FastAPI(
@@ -14,24 +14,4 @@ app = FastAPI(
     },
 )
 
-
-class APIContactInfo(TypedDict):
-    """Represents the contact info for the api owner."""
-
-    name: str
-    url: HttpUrl
-
-
-class APIMetadata(BaseModel):
-    """Represents the metadata for the api itself, returned at the root of the api."""
-
-    name: str
-    version: str
-    contact: APIContactInfo
-
-
-@app.get("/", response_model=APIMetadata)
-async def info(request: Request) -> dict[str, Any]:
-    """Return the metadata for the API."""
-    app: FastAPI = request.app
-    return {"name": app.title, "version": app.version, "contact": app.contact}
+app.include_router(root.router)
