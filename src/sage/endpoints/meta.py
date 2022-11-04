@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, FastAPI, Request
 
-from sage.models.root import APIMetadata
+from sage.models.meta import APIMetadata
 
 
 router = APIRouter(tags=["meta"])

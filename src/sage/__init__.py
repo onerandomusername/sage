@@ -1,8 +1,10 @@
 """Sage."""
 
 from fastapi import FastAPI
+from starlette import status
+from starlette.responses import RedirectResponse
 
-from sage.endpoints import root
+from sage.endpoints import meta
 
 
 app = FastAPI(
@@ -14,4 +16,22 @@ app = FastAPI(
     },
 )
 
-app.include_router(root.router)
+
+# redirect root to meta
+@app.get(
+    "/",
+    status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+    include_in_schema=False,
+    response_class=RedirectResponse,
+)
+async def root() -> str:
+    """Redirect the user to the current root of the api."""
+    return "/api"
+
+
+# we want to include no prefix on the root router
+# and a prefix on the non-root router
+# this means we currently serve meta from both `/` and `/api`
+prefix = "/api"
+app.include_router(meta.router)
+app.include_router(meta.router, prefix=prefix)
