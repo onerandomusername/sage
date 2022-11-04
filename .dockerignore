@@ -1,0 +1,9 @@
+# Exclude everything
+*
+
+# Make exceptions for what's needed
+!src/
+!pyproject.toml
+!poetry.lock
+!LICENSE
+!README.md
