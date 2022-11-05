@@ -23,3 +23,6 @@ ignore=
     ANN002,ANN003,ANN101,ANN102,ANN204,ANN206,ANN401,
     # Whitespace Before
     E203
+
+per-file-ignores:
+    src/sage/core/database/**.py:D106
