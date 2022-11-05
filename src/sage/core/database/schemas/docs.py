@@ -17,7 +17,15 @@ class DocPackageBase(BaseModel):
 class DocPackageCreate(DocPackageBase):
     """Payload structure to create a DocPackage."""
 
-    pass
+    class Config:
+        schema_extra = {
+            "example": dict(
+                name="disnake",
+                inventory_url="https://docs.disnake.dev/en/stable/objects.inv",
+                human_url="https://docs.disnake.dev/en/stable/",
+                programming_language=ProgrammingLanguage.python,
+            )
+        }
 
 
 class DocPackage(DocPackageBase):
@@ -31,3 +39,12 @@ class DocPackage(DocPackageBase):
 
     class Config:
         orm_mode = True
+        schema_extra = {
+            "example": dict(
+                name="disnake",
+                inventory_url="https://docs.disnake.dev/en/stable/objects.inv",
+                human_url="https://docs.disnake.dev/en/stable/",
+                programming_language=ProgrammingLanguage.python,
+                is_enabled=True,
+            )
+        }
