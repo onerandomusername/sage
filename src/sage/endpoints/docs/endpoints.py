@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sage.core.database import schemas
 from sage.core.database.crud.docs import create_docs
-from sage.core.dependencies import GET_DB
+from sage.core.dependencies import GET_SESSION
 from sage.enums import ProgrammingLanguage
 
 
@@ -37,7 +37,7 @@ async def get_root(
 # todo: add Depends/middleware to prevent anyone from creating a package
 @router.post("/", response_model=schemas.DocPackage, name="Create a package")
 async def post_root(
-    package: schemas.DocPackageCreate, db: AsyncSession = GET_DB
+    package: schemas.DocPackageCreationRequest, db: AsyncSession = GET_SESSION
 ) -> schemas.DocPackage:
     """Add a new package to the documentation index."""
     async with db.begin():

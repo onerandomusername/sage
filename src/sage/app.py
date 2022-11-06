@@ -3,7 +3,7 @@ from starlette import status
 from starlette.responses import RedirectResponse
 
 from sage.core.database.models.base import Base
-from sage.db import engine
+from sage.database import engine
 from sage.endpoints import docs, meta
 
 

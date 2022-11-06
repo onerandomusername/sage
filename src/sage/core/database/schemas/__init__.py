@@ -1,4 +1,7 @@
-from sage.core.database.schemas.docs import DocPackage, DocPackageCreate
+from sage.core.database.schemas.docs import DocPackage, DocPackageCreationRequest
 
 
-__all__ = ("DocPackage", "DocPackageCreate")
+__all__ = (
+    "DocPackage",
+    "DocPackageCreationRequest",
+)

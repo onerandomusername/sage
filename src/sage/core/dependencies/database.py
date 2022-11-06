@@ -6,7 +6,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from sage.db import engine
+from sage.database import engine
 
 
 SessionLocal = sessionmaker(
@@ -14,13 +14,13 @@ SessionLocal = sessionmaker(
 )
 
 
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """Get the database to be used in a route callback."""
-    db: AsyncSession = SessionLocal()  # type: ignore
+    session: AsyncSession = SessionLocal()  # type: ignore
     try:
-        yield db
+        yield session
     finally:
-        await db.close()
+        await session.close()
 
 
-GET_DB = Depends(get_db)
+GET_SESSION = Depends(get_session)

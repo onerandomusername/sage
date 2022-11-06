@@ -4,7 +4,10 @@ from pydantic import BaseModel, HttpUrl
 from sage.enums import ProgrammingLanguage
 
 
-__all__ = ("DocPackage", "DocPackageCreate")
+__all__ = (
+    "DocPackage",
+    "DocPackageCreationRequest",
+)
 
 
 class DocPackageBase(BaseModel):
@@ -14,7 +17,7 @@ class DocPackageBase(BaseModel):
     programming_language: ProgrammingLanguage
 
 
-class DocPackageCreate(DocPackageBase):
+class DocPackageCreationRequest(DocPackageBase):
     """Payload structure to create a DocPackage."""
 
     class Config:
