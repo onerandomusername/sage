@@ -14,7 +14,9 @@ async def get_docs(db: AsyncSession, name: str) -> models.DocPackage | None:
     return resp
 
 
-async def create_docs(db: AsyncSession, doc_package: schemas.DocPackageCreate) -> models.DocPackage:
+async def create_docs(
+    db: AsyncSession, doc_package: schemas.DocPackageCreationRequest
+) -> models.DocPackage:
     """Create a new documentation object with the provided schema."""
     db_doc_package = models.DocPackage(
         name=doc_package.name,
