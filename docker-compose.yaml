@@ -4,6 +4,23 @@ x-restart-policy: &restart_policy
   restart: unless-stopped
 
 services:
+  postgres:
+    <<: *restart_policy
+    image:
+      postgres:
+    image: postgres:13-alpine
+    ports:
+      - "127.0.0.1:9999:5432"
+    environment:
+      POSTGRES_DB: sage
+      POSTGRES_PASSWORD: sage
+      POSTGRES_USER: sage
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sage"]
+      interval: 2s
+      timeout: 1s
+      retries: 5
+
   sage:
     << : *restart_policy
     build:
@@ -15,6 +32,8 @@ services:
     tty: true
     ports:
       - "8000:8000"
+    depends_on:
+      - postgres
 
     volumes:
       - ./src:/sage/src
