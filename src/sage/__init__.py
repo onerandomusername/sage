@@ -26,7 +26,7 @@ app = FastAPI(
 )
 async def root() -> str:
     """Redirect the user to the current root of the api."""
-    return "/api"
+    return "/api/"
 
 
 # we want to include no prefix on the root router
