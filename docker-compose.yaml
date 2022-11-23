@@ -34,6 +34,10 @@ services:
       - "8000:8000"
     depends_on:
       - postgres
+    environment:
+      - SAGE_DATABASE_BIND=postgresql+asyncpg://sage:sage@postgres:5432/sage
+    env_file:
+      - .env
 
     volumes:
       - ./src:/sage/src

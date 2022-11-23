@@ -7,3 +7,5 @@
 !poetry.lock
 !LICENSE
 !README.md
+!alembic.ini
+!entrypoint.sh

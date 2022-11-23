@@ -28,4 +28,4 @@ COPY . .
 RUN pip install . --no-deps
 
 # this is a basic start command that will not be used in the future
-ENTRYPOINT ["uvicorn", "sage:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "entrypoint.sh"]

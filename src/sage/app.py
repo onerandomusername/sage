@@ -2,8 +2,6 @@ from fastapi import FastAPI
 from starlette import status
 from starlette.responses import RedirectResponse
 
-from sage.core.database.models.base import Base
-from sage.database import engine
 from sage.endpoints import docs, meta
 
 
@@ -15,14 +13,6 @@ app = FastAPI(
         "url": "https://github.com/onerandomusername/sage",
     },
 )
-
-
-@app.on_event("startup")
-async def startup() -> None:
-    """Temporarily run migrations on api start."""
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
 
 
 # redirect root to meta
