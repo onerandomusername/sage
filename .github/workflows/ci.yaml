@@ -22,6 +22,7 @@ permissions:
 env:
   # Configure pip to cache dependencies and do a user install
   PIP_NO_CACHE_DIR: false
+  # this is also hardcoded below for the docker container
   PYTHON_VERSION: "3.10"
 
   # Specify explicit paths for python dependencies and the pre-commit
@@ -122,6 +123,26 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    container: 'python:3.10-bullseye'
+    services:    # Service containers to run with `container-job`
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres:13-alpine
+        # Provide the password for postgres
+        env:
+          POSTGRES_DB: sage
+          POSTGRES_PASSWORD: sage
+          POSTGRES_USER: sage
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
     steps:
       - name: Add custom PYTHONUSERBASE to PATH
         run: echo '${{ env.PYTHONUSERBASE }}/bin/' >> $GITHUB_PATH
