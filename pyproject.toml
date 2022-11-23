@@ -75,5 +75,5 @@ typeCheckingMode = "basic"
 
 [tool.pytest.ini_options]
 env = [
-  "D:SAGE_DATABASE_BIND=postgresql+asyncpg://sage:sage@postgres:5432/sage",
+  "D:SAGE_DATABASE_BIND=postgresql+asyncpg://sage:localhost@postgres:5432/sage",
 ]
