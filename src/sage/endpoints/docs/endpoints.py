@@ -1,37 +1,22 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sage.core.database import schemas
-from sage.core.database.crud.docs import create_docs
+from sage.core.database.crud.docs import create_doc_package, get_all_doc_packages
 from sage.core.dependencies import GET_SESSION
-from sage.enums import ProgrammingLanguage
 
 
 router = APIRouter(prefix="/docs", tags=["documentation"])
 
 
 @router.get("/", name="Get all packages")
-async def get_root(
-    request: Request, lang: ProgrammingLanguage = ProgrammingLanguage.python
-) -> dict[str, list[schemas.DocPackage]]:
+async def get_root(db: AsyncSession = GET_SESSION) -> list[schemas.DocPackage]:
     """Return all supported documentation inventories."""
-    # for now return mock data
-    return {
-        lang.value: [
-            schemas.DocPackage(
-                name="python",
-                inventory_url="https://docs.python.org/3/objects.inv",  # type: ignore
-                human_url="https://docs.python.org/3/",  # type: ignore
-                programming_language=lang,
-            ),
-            schemas.DocPackage(
-                name="disnake",
-                inventory_url="https://docs.disnake.dev/page/objects.inv",  # type: ignore
-                human_url="https://docs.disnake.dev/page/",  # type: ignore
-                programming_language=lang,
-            ),
-        ]
-    }
+    db_packages = await get_all_doc_packages(db)
+    packages: list[schemas.DocPackage] = []
+    for package in db_packages:
+        packages.append(schemas.DocPackage.from_orm(package))
+    return packages
 
 
 # todo: add Depends/middleware to prevent anyone from creating a package
@@ -41,7 +26,7 @@ async def post_root(
 ) -> schemas.DocPackage:
     """Add a new package to the documentation index."""
     async with db.begin():
-        resp = await create_docs(db, package)
+        resp = await create_doc_package(db, package)
     return schemas.DocPackage.from_orm(resp)
 
 

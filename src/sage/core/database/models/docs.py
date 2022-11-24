@@ -1,26 +1,39 @@
-from sqlalchemy import Boolean, Column, Enum, Integer, String
+from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
 
 from sage.core.database.models.base import Base
-from sage.enums import ProgrammingLanguage
+from sage.enums import LanguageCode, ProgrammingLanguage
+
+
+__all__ = ("DocPackage", "DocSource")
 
 
 # todo: CheckConstraint for url data
 class DocPackage(Base):
-    """Represents a DocPackage stored in the database."""
+    """Represents a Package which can have multiple sources."""
 
     __tablename__ = "doc_packages"
 
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
-    is_enabled = Column(Boolean, default=True, nullable=False)
-    require_opt_in = Column(Boolean, default=True, nullable=False)
-    custom_parser = Column(String(250), nullable=True)
-    inventory_url = Column(String(250), nullable=True)
-    human_url = Column(String(250), nullable=False)
-    format_url = Column(String(250), nullable=True)
+    homepage = Column(
+        String(512), nullable=False
+    )  # url # not necessarily the documentation, could be pypi project page or w/e
     programming_language = Column(Enum(ProgrammingLanguage), nullable=False)
-    pull_request_url = Column(String(250), nullable=True)
-    version_url = Column(String(250), nullable=True)
 
-    # tags =
-    # version =
+    # sources = relationship("DocSource", backref="package")
+
+
+class DocSource(Base):
+    """Represents a documentation source for a specific version/language of a DocPackage."""
+
+    __tablename__ = "doc_sources"
+
+    id = Column(Integer, primary_key=True)
+    package = relationship("DocPackage")
+    package_id = Column(Integer, ForeignKey("doc_packages.id"))
+    preview = Column(Boolean, default=True, nullable=False)
+    inventory_url = Column(String(250), nullable=True)
+    human_friendly_url = Column(String(250), nullable=False)
+    version = Column(String(30), nullable=True)
+    language_code = Column(Enum(LanguageCode), nullable=False)
