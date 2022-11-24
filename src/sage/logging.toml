@@ -1,0 +1,31 @@
+version = 1
+
+[formatters.default]
+class = 'coloredlogs.ColoredFormatter'
+datefmt = '%Y-%m-%d %H:%M:%S'
+format = '%(asctime)s %(levelname)-8s %(name)-15s %(message)s'
+
+[handlers.console]
+class = 'logging.StreamHandler'
+formatter = 'default'
+level = 'INFO'
+stream = 'ext://sys.stdout'
+
+[loggers.sage]
+handlers = ['console']
+level = 'DEBUG'
+propagate = true
+
+[loggers.uvicorn]
+handlers = ['console']
+level = 'INFO'
+propagate = true
+
+[loggers.watchfiles]
+handlers = ['console']
+level = 'INFO'
+propagate = true
+
+[root]
+handlers = ['console']
+level = 'INFO'
