@@ -198,7 +198,7 @@ jobs:
   build:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     name: Build & Push
-    needs: [lint]
+    needs: [lint, test]
     runs-on: ubuntu-latest
     permissions:
       packages: write
