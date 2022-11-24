@@ -34,6 +34,7 @@ def load_file(path: str | pathlib.Path, *, allow_not_exist: bool = False) -> dic
 def configure_logging() -> None:
     """Load logging configuration."""
     default_config = load_file(DEFAULT_FILE)
-    user_config = load_file(pathlib.Path.cwd() / "logging.toml", allow_not_exist=True) or {}
+    user_config = load_file(pathlib.Path.cwd() / "logging.toml", allow_not_exist=True)
     logging.config.dictConfig(default_config)
-    logging.config.dictConfig(user_config)
+    if user_config is not None:
+        logging.config.dictConfig(user_config)
