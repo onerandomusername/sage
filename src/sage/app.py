@@ -3,6 +3,7 @@ from starlette import status
 from starlette.responses import RedirectResponse
 
 from sage.endpoints import docs, meta
+from sage.logging import configure_logging
 
 
 app = FastAPI(
@@ -25,6 +26,12 @@ app = FastAPI(
 async def root() -> str:
     """Redirect the user to the current root of the api."""
     return "/api/"
+
+
+@app.on_event("startup")
+async def setup_logging() -> None:
+    """Configure logging on application startup."""
+    configure_logging()
 
 
 # we want to include no prefix on the root router

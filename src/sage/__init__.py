@@ -10,8 +10,4 @@ except ImportError:
 else:
     load_dotenv(override=False)
 
-import sage.logging
 from sage.app import app
-
-
-sage.logging.configure_logging()
