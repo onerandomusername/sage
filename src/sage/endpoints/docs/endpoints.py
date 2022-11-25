@@ -15,7 +15,7 @@ from sage.core.dependencies import GET_SESSION
 router = APIRouter(prefix="/docs", tags=["documentation"])
 
 
-@router.get("/", name="Get all packages")
+@router.get("/packages", name="Get all packages")
 async def get_root(db: AsyncSession = GET_SESSION) -> list[schemas.DocPackage]:
     """Return all supported documentation inventories."""
     db_packages = await get_all_doc_packages(db)
@@ -26,7 +26,7 @@ async def get_root(db: AsyncSession = GET_SESSION) -> list[schemas.DocPackage]:
 
 
 # todo: add Depends/middleware to prevent anyone from creating a package
-@router.post("/", response_model=schemas.DocPackage, name="Create a package")
+@router.post("/packages", response_model=schemas.DocPackage, name="Create a package")
 async def post_root(
     package: schemas.DocPackageCreationRequest, db: AsyncSession = GET_SESSION
 ) -> schemas.DocPackage:
@@ -37,7 +37,7 @@ async def post_root(
 
 
 @router.get(
-    "/{package_id}",
+    "/packages/{package_id}",
     response_model=schemas.DocPackage,
     name="Get an existing Documentation Package.",
 )
@@ -49,7 +49,7 @@ async def get_package(package_id: int, db: AsyncSession = GET_SESSION) -> schema
 
 
 @router.patch(
-    "/{package_id}",
+    "/packages/{package_id}",
     response_model=schemas.DocPackage,
     name="Modify an existing DocPackage",
 )
@@ -64,7 +64,7 @@ async def modify_package(
     return schemas.DocPackage.from_orm(resp)
 
 
-@router.delete("/{package_id}", name="Delete a package.", status_code=204)
+@router.delete("/packages/{package_id}", name="Delete a package.", status_code=204)
 async def delete_package(package_id: int, db: AsyncSession = GET_SESSION) -> None:
     """Delete an existing package. This cannot be undone."""
     async with db.begin():
