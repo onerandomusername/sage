@@ -6,6 +6,7 @@ from sage.core.database.crud.docs import (
     create_doc_package,
     delete_doc_package,
     get_all_doc_packages,
+    get_doc_package,
     modify_doc_package,
 )
 from sage.core.dependencies import GET_SESSION
@@ -32,6 +33,18 @@ async def post_root(
     """Add a new package to the documentation index."""
     async with db.begin():
         resp = await create_doc_package(db, package)
+    return schemas.DocPackage.from_orm(resp)
+
+
+@router.get(
+    "/{package_id}",
+    response_model=schemas.DocPackage,
+    name="Get an existing Documentation Package.",
+)
+async def get_package(package_id: int, db: AsyncSession = GET_SESSION) -> schemas.DocPackage:
+    """Get an existing documentation package by ID."""
+    async with db.begin():
+        resp = await get_doc_package(db, package_id)
     return schemas.DocPackage.from_orm(resp)
 
 
