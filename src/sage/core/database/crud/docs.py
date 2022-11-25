@@ -1,14 +1,26 @@
+from fastapi import HTTPException
+from sqlalchemy import update
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from sage.core.database import models, schemas
 
 
-async def get_doc_package(db: AsyncSession, name: str) -> models.DocPackage | None:
+# todo: refactor transactions
+
+
+async def get_doc_package(db: AsyncSession, id: int) -> models.DocPackage | None:
+    """Get the docs by their primary key."""
+    resp = (await db.execute(select(models.DocPackage).where(models.DocPackage.id == id))).one()
+    if resp and len(resp) == 1:
+        return resp[0]
+    return resp
+
+
+async def get_doc_package_by_name(db: AsyncSession, name: str) -> models.DocPackage | None:
     """Get the docs that match the provided name."""
-    resp = (
-        await db.execute(select(models.DocPackage).where(models.DocPackage.name == name))
-    ).first()
+    resp = (await db.execute(select(models.DocPackage).where(models.DocPackage.name == name))).one()
     if resp and len(resp) == 1:
         return resp[0]
     return resp
@@ -17,9 +29,10 @@ async def get_doc_package(db: AsyncSession, name: str) -> models.DocPackage | No
 async def get_all_doc_packages(db: AsyncSession) -> list[models.DocPackage]:
     """Fetch *all* documentation packages from the database."""
     resp = (await db.execute(select(models.DocPackage))).all()
-    if resp:
-        return [x[0] for x in resp]
-    raise Exception
+    if not resp:
+        # todo: make more specific
+        raise Exception
+    return [row[0] for row in resp]
 
 
 async def create_doc_package(
@@ -49,3 +62,27 @@ async def create_doc_package(
     db.add_all(sources)
     await db.commit()
     return db_doc_package
+
+
+async def modify_doc_package(
+    db: AsyncSession, id: int, doc_package: schemas.DocPackagePatchRequest
+) -> models.DocPackage:
+    """Modify the existing doc_package with the newly provided request."""
+    stmt = (
+        update(models.DocPackage)
+        .where(models.DocPackage.id == id)
+        .values(**doc_package.dict(exclude_unset=True))
+        .execution_options(synchronize_session="fetch")
+    )
+    result: CursorResult = await db.execute(stmt)
+    if result.rowcount == 0:
+        raise HTTPException(status_code=404, detail=f"No package with id '{id}' was found.")
+    if result.rowcount != 1:
+        await db.rollback()
+        raise RuntimeError(
+            "updated more than one package based on primary key. This code is unreachable."
+        )
+    # fetch the new package
+    package = await get_doc_package(db, id)
+    await db.commit()
+    return package

@@ -1,8 +1,12 @@
 from fastapi import APIRouter
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, AsyncTransaction
 
 from sage.core.database import schemas
-from sage.core.database.crud.docs import create_doc_package, get_all_doc_packages
+from sage.core.database.crud.docs import (
+    create_doc_package,
+    get_all_doc_packages,
+    modify_doc_package,
+)
 from sage.core.dependencies import GET_SESSION
 
 
@@ -27,6 +31,23 @@ async def post_root(
     """Add a new package to the documentation index."""
     async with db.begin():
         resp = await create_doc_package(db, package)
+    return schemas.DocPackage.from_orm(resp)
+
+
+@router.patch(
+    "/{package_id}",
+    response_model=schemas.DocPackage,
+    name="Modify an existing DocPackage",
+)
+async def modify_package(
+    package_id: int,
+    package: schemas.DocPackagePatchRequest,
+    db: AsyncSession = GET_SESSION,
+) -> schemas.DocPackage:
+    """Modify an existing Package. The full package must be provided."""
+    trans: AsyncTransaction
+    async with db.begin():
+        resp = await modify_doc_package(db, package_id, package)
     return schemas.DocPackage.from_orm(resp)
 
 
