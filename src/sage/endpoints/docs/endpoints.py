@@ -1,9 +1,10 @@
 from fastapi import APIRouter
-from sqlalchemy.ext.asyncio import AsyncSession, AsyncTransaction
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from sage.core.database import schemas
 from sage.core.database.crud.docs import (
     create_doc_package,
+    delete_doc_package,
     get_all_doc_packages,
     modify_doc_package,
 )
@@ -45,10 +46,17 @@ async def modify_package(
     db: AsyncSession = GET_SESSION,
 ) -> schemas.DocPackage:
     """Modify an existing Package. The full package must be provided."""
-    trans: AsyncTransaction
     async with db.begin():
         resp = await modify_doc_package(db, package_id, package)
     return schemas.DocPackage.from_orm(resp)
+
+
+@router.delete("/{package_id}", name="Delete a package.", status_code=204)
+async def delete_package(package_id: int, db: AsyncSession = GET_SESSION) -> None:
+    """Delete an existing package. This cannot be undone."""
+    async with db.begin():
+        await delete_doc_package(db, package_id)
+    return
 
 
 # @router.get("/search", name="Search within package inventories")

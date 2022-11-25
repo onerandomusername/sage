@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from sqlalchemy import update
+from sqlalchemy import delete, update
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -86,3 +86,26 @@ async def modify_doc_package(
     package = await get_doc_package(db, id)
     await db.commit()
     return package
+
+
+async def delete_doc_package(
+    db: AsyncSession,
+    id: int,
+) -> None:
+    """Delete documentation package based on ID."""
+    stmt = (
+        delete(models.DocPackage)
+        .where(models.DocPackage.id == id)
+        .execution_options(synchronize_session="fetch")
+    )
+    # todo: need to delete all linked sources as well
+    result: CursorResult = await db.execute(stmt)
+    if result.rowcount == 0:
+        raise HTTPException(status_code=404, detail=f"No package with id '{id}' was found.")
+    if result.rowcount != 1:
+        await db.rollback()
+        raise RuntimeError(
+            "deleted more than one package based on primary key. This code is unreachable."
+        )
+    await db.commit()
+    return
