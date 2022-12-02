@@ -7,9 +7,6 @@ from sqlalchemy.future import select
 from sage.core.database import models, schemas
 
 
-# todo: refactor transactions
-
-
 async def get_doc_package(db: AsyncSession, id: int) -> models.DocPackage | None:
     """Get the docs by their primary key."""
     resp = (await db.execute(select(models.DocPackage).where(models.DocPackage.id == id))).one()
@@ -44,23 +41,23 @@ async def create_doc_package(
         homepage=str(doc_package.homepage),
         programming_language=doc_package.programming_language,
     )
-    db.add(db_doc_package, True)
-    db_doc_package.id
-    sources: list[models.DocSource] = []
-    for source in doc_package.sources:
-        # todo: use yarl for this and do validation elsewhere
-        human_friendly_url = source.inventory_url.removesuffix("/objects.inv")
-        sources.append(
-            models.DocSource(
-                package=db_doc_package,
-                inventory_url=source.inventory_url,
-                version=source.version,
-                human_friendly_url=human_friendly_url,
-                language_code=source.language,
-            ),
-        )
-    db.add_all(sources)
-    await db.commit()
+    async with db.begin():
+        sources: list[models.DocSource] = []
+        for source in doc_package.sources:
+            # todo: use yarl for this and do validation elsewhere
+            human_friendly_url = source.inventory_url.removesuffix("/objects.inv")
+            sources.append(
+                models.DocSource(
+                    package=db_doc_package,
+                    inventory_url=source.inventory_url,
+                    version=source.version,
+                    human_friendly_url=human_friendly_url,
+                    language_code=source.language,
+                ),
+            )
+        db.add(db_doc_package, True)
+        db.add_all(sources)
+        await db.commit()
     return db_doc_package
 
 
@@ -74,17 +71,18 @@ async def modify_doc_package(
         .values(**doc_package.dict(exclude_unset=True))
         .execution_options(synchronize_session="fetch")
     )
-    result: CursorResult = await db.execute(stmt)
-    if result.rowcount == 0:
-        raise HTTPException(status_code=404, detail=f"No package with id '{id}' was found.")
-    if result.rowcount != 1:
-        await db.rollback()
-        raise RuntimeError(
-            "updated more than one package based on primary key. This code is unreachable."
-        )
-    # fetch the new package
-    package = await get_doc_package(db, id)
-    await db.commit()
+    async with db.begin():
+        result: CursorResult = await db.execute(stmt)
+        if result.rowcount == 0:
+            raise HTTPException(status_code=404, detail=f"No package with id '{id}' was found.")
+        if result.rowcount != 1:
+            await db.rollback()
+            raise RuntimeError(
+                "updated more than one package based on primary key. This code is unreachable."
+            )
+        # fetch the new package
+        package = await get_doc_package(db, id)
+        await db.commit()
     return package
 
 
@@ -99,13 +97,14 @@ async def delete_doc_package(
         .execution_options(synchronize_session="fetch")
     )
     # todo: need to delete all linked sources as well
-    result: CursorResult = await db.execute(stmt)
-    if result.rowcount == 0:
-        raise HTTPException(status_code=404, detail=f"No package with id '{id}' was found.")
-    if result.rowcount != 1:
-        await db.rollback()
-        raise RuntimeError(
-            "deleted more than one package based on primary key. This code is unreachable."
-        )
-    await db.commit()
+    async with db.begin():
+        result: CursorResult = await db.execute(stmt)
+        if result.rowcount == 0:
+            raise HTTPException(status_code=404, detail=f"No package with id '{id}' was found.")
+        if result.rowcount != 1:
+            await db.rollback()
+            raise RuntimeError(
+                "deleted more than one package based on primary key. This code is unreachable."
+            )
+        await db.commit()
     return
