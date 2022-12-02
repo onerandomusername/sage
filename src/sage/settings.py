@@ -4,7 +4,7 @@ from pydantic import BaseSettings, Field, PostgresDsn
 __all__ = ("Settings", "get_settings")
 
 
-class AsyncPostgresDsn(PostgresDsn):
+class AsyncPostgresDsn(PostgresDsn):  # noqa: D101
     allowed_schemes = {
         "postgresql+asyncpg",
     }

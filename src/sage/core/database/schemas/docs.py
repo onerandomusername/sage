@@ -10,7 +10,7 @@ __all__ = (
 )
 
 
-class DocPackageBase(BaseModel):
+class DocPackageBase(BaseModel):  # noqa: D101
     name: str
     inventory_url: HttpUrl
     human_url: HttpUrl
@@ -22,12 +22,12 @@ class DocPackageCreationRequest(DocPackageBase):
 
     class Config:
         schema_extra = {
-            "example": dict(
-                name="disnake",
-                inventory_url="https://docs.disnake.dev/en/stable/objects.inv",
-                human_url="https://docs.disnake.dev/en/stable/",
-                programming_language=ProgrammingLanguage.python,
-            )
+            "example": {
+                "name": "disnake",
+                "inventory_url": "https://docs.disnake.dev/en/stable/objects.inv",
+                "human_url": "https://docs.disnake.dev/en/stable/",
+                "programming_language": ProgrammingLanguage.python,
+            }
         }
 
 
@@ -43,11 +43,11 @@ class DocPackage(DocPackageBase):
     class Config:
         orm_mode = True
         schema_extra = {
-            "example": dict(
-                name="disnake",
-                inventory_url="https://docs.disnake.dev/en/stable/objects.inv",
-                human_url="https://docs.disnake.dev/en/stable/",
-                programming_language=ProgrammingLanguage.python,
-                is_enabled=True,
-            )
+            "example": {
+                "name": "disnake",
+                "inventory_url": "https://docs.disnake.dev/en/stable/objects.inv",
+                "human_url": "https://docs.disnake.dev/en/stable/",
+                "programming_language": ProgrammingLanguage.python,
+                "is_enabled": True,
+            }
         }
