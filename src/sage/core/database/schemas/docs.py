@@ -75,19 +75,19 @@ class DocPackagePatchRequest(DocPackageBase):
 
     class Config:
         schema_extra = {
-            "example": dict(
-                name="disnake 2.0",
-                homepage="https://disnake.dev/?",
-                programming_language=ProgrammingLanguage.text,
-                sources=[
-                    dict(
-                        inventory_url="https://docs.disnake.dev/en/latest/objects.inv",
-                        preview=False,
-                        version="2.8.0a",
-                        language_code=LanguageCode.en_GB,
-                    )
+            "example": {
+                "name": "disnake 2.0",
+                "homepage": "https://disnake.dev/?",
+                "programming_language": ProgrammingLanguage.text,
+                "sources": [
+                    {
+                        "inventory_url": "https://docs.disnake.dev/en/latest/objects.inv",
+                        "preview": False,
+                        "version": "2.8.0a",
+                        "language_code": LanguageCode.en_GB,
+                    }
                 ],
-            )
+            }
         }
 
 
