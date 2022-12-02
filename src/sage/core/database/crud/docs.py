@@ -91,12 +91,7 @@ async def delete_doc_package(
     id: int,
 ) -> None:
     """Delete documentation package based on ID."""
-    stmt = (
-        delete(models.DocPackage)
-        .where(models.DocPackage.id == id)
-        .execution_options(synchronize_session="fetch")
-    )
-    # todo: need to delete all linked sources as well
+    stmt = delete(models.DocPackage).where(models.DocPackage.id == id)
     async with db.begin():
         result: CursorResult = await db.execute(stmt)
         if result.rowcount == 0:

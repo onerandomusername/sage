@@ -21,7 +21,7 @@ class DocPackage(Base):
     )  # url # not necessarily the documentation, could be pypi project page or w/e
     programming_language = Column(Enum(ProgrammingLanguage), nullable=False)
 
-    # sources = relationship("DocSource", backref="package")
+    sources = relationship("DocSource", cascade="all, delete, delete-orphan")
 
 
 class DocSource(Base):
@@ -30,8 +30,8 @@ class DocSource(Base):
     __tablename__ = "doc_sources"
 
     id = Column(Integer, primary_key=True)
-    package = relationship("DocPackage")
-    package_id = Column(Integer, ForeignKey("doc_packages.id"))
+    package = relationship("DocPackage", back_populates="sources")
+    package_id = Column(Integer, ForeignKey("doc_packages.id", ondelete="CASCADE"))
     preview = Column(Boolean, default=True, nullable=False)
     inventory_url = Column(String(250), nullable=True)
     human_friendly_url = Column(String(250), nullable=False)
