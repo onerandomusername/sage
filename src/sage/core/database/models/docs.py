@@ -25,8 +25,8 @@ class DocPackage(Base):
 
     sources = relationship("DocSource", cascade="all, delete, delete-orphan")
 
-    def to_json(self, include_sources: bool = False) -> dict[str, Any]:
-        """Convert the package to a json representation."""
+    def to_dict(self, include_sources: bool = False) -> dict[str, Any]:
+        """Convert the package to a dict representation which is ready for json serialisation."""
         resp = {
             "id": self.id,
             "name": self.name,
@@ -52,3 +52,19 @@ class DocSource(Base):
     human_friendly_url = Column(String(250), nullable=False)
     version = Column(String(30), nullable=True)
     language_code = Column(Enum(LanguageCode), nullable=False)
+
+    def to_dict(self, include_package: bool = False) -> dict[str, Any]:
+        """Convert the source to a dict representation which is ready for json serialisation."""
+        resp = {
+            "id": self.id,
+            "package_id": self.package_id,
+            "preview": self.preview,
+            "inventory_url": self.inventory_url,
+            "human_friendly_url": self.human_friendly_url,
+            "version": self.version,
+            "language_code": self.language_code,
+        }
+        if include_package:
+            # note: this requires await or cached
+            resp["package"] = self.package
+        return resp

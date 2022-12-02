@@ -125,11 +125,15 @@ class DocSourceCreationRequest(DocSourceBase):
 
     class Config:
         schema_extra = {
-            "example": {
-                "package": DocPackage.Config.schema_extra["example"],
-                "version": "2.7.0",
-            }
+            "example": DocSource.Config.schema_extra["example"],
         }
+
+
+class DocSourcePatchRequest(DocSourceBase):
+    """Required parameters to change a documentation source."""
+
+    preview: bool | None = None
+    version: str | None = None
 
 
 # this name is ridiculous.
