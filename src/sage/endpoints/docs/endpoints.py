@@ -25,7 +25,7 @@ async def get_root(db: AsyncSession = GET_SESSION) -> list[schemas.DocPackage]:
     return packages
 
 
-# todo: add Depends/middleware to prevent anyone from creating a package
+# todo: add Depends/middleware to make this admin only
 @router.post("/packages", response_model=schemas.DocPackage, name="Create a package")
 async def post_root(
     package: schemas.DocPackageCreationRequest, db: AsyncSession = GET_SESSION
@@ -48,6 +48,7 @@ async def get_package(package_id: int, db: AsyncSession = GET_SESSION) -> schema
     return schemas.DocPackage.from_orm(resp)
 
 
+# todo: add Depends/middleware to make this admin only
 @router.patch(
     "/packages/{package_id}",
     response_model=schemas.DocPackage,
@@ -64,6 +65,7 @@ async def modify_package(
     return schemas.DocPackage.from_orm(resp)
 
 
+# todo: add Depends/middleware to prevent anyone from creating a package
 @router.delete("/packages/{package_id}", name="Delete a package.", status_code=204)
 async def delete_package(package_id: int, db: AsyncSession = GET_SESSION) -> None:
     """Delete an existing package. This cannot be undone."""
@@ -72,6 +74,13 @@ async def delete_package(package_id: int, db: AsyncSession = GET_SESSION) -> Non
     return
 
 
-# @router.get("/search", name="Search within package inventories")
-# async def get_search(request: Request, query: str, lang: ProgrammingLanguage) -> dict[str, Any]:
-#     return {}
+# todo: source routes to implement
+# GET /packages/{package_id}/sources
+# POST /packages/{package_id}/sources OR /sources
+# GET /sources/{source_id}
+# PATCH /sources/{source_id}
+# DELETE /sources/{source_id}
+
+
+# todo (much later):
+# search routes and all of the different query args that will have
