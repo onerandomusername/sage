@@ -1,3 +1,5 @@
+from typing import Any
+
 from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -22,6 +24,19 @@ class DocPackage(Base):
     programming_language = Column(Enum(ProgrammingLanguage), nullable=False)
 
     sources = relationship("DocSource", cascade="all, delete, delete-orphan")
+
+    def to_json(self, include_sources: bool = False) -> dict[str, Any]:
+        """Convert the package to a json representation."""
+        resp = {
+            "id": self.id,
+            "name": self.name,
+            "homepage": self.homepage,
+            "programming_language": self.programming_language,
+        }
+        if include_sources:
+            # note: this requires await or cached
+            resp["sources"] = self.sources
+        return resp
 
 
 class DocSource(Base):

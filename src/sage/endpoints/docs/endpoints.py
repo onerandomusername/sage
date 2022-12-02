@@ -1,4 +1,6 @@
-from fastapi import APIRouter
+from typing import Any
+
+from fastapi import APIRouter, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sage.core.database import schemas
@@ -16,12 +18,12 @@ router = APIRouter(prefix="/docs", tags=["documentation"])
 
 
 @router.get("/packages", name="Get all packages")
-async def get_root(db: AsyncSession = GET_SESSION) -> list[schemas.DocPackage]:
+async def get_root(db: AsyncSession = GET_SESSION) -> list[dict[str, Any]]:
     """Return all supported documentation inventories."""
     db_packages = await get_all_doc_packages(db)
-    packages: list[schemas.DocPackage] = []
+    packages: list[dict[str, Any]] = []
     for package in db_packages:
-        packages.append(schemas.DocPackage.from_orm(package))
+        packages.append(package.to_json())
     return packages
 
 
@@ -37,13 +39,14 @@ async def post_root(
 
 @router.get(
     "/packages/{package_id}",
-    response_model=schemas.DocPackage,
     name="Get an existing Documentation Package.",
 )
-async def get_package(package_id: int, db: AsyncSession = GET_SESSION) -> schemas.DocPackage:
+async def get_package(package_id: int, db: AsyncSession = GET_SESSION) -> dict[str, Any]:
     """Get an existing documentation package by ID."""
     resp = await get_doc_package(db, package_id)
-    return schemas.DocPackage.from_orm(resp)
+    if resp is None:
+        raise HTTPException(404, "Package could not be found.")
+    return resp.to_json(include_sources=True)
 
 
 # todo: add Depends/middleware to make this admin only

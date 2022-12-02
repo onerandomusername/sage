@@ -3,13 +3,22 @@ from sqlalchemy import delete, update
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from sage.core.database import models, schemas
 
 
-async def get_doc_package(db: AsyncSession, id: int) -> models.DocPackage | None:
+async def get_doc_package(
+    db: AsyncSession, id: int, include_sources: bool = False
+) -> models.DocPackage | None:
     """Get the docs by their primary key."""
-    resp = (await db.execute(select(models.DocPackage).where(models.DocPackage.id == id))).one()
+    resp = (
+        await db.execute(
+            select(models.DocPackage)
+            .options(selectinload(models.DocPackage.sources))
+            .where(models.DocPackage.id == id)
+        )
+    ).one()
     if resp and len(resp) == 1:
         return resp[0]
     return resp

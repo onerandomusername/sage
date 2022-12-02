@@ -1,5 +1,6 @@
 """Pydantic Schemas for sage.core.database.models.docs."""
 
+
 from pydantic import BaseModel, HttpUrl
 
 from sage.enums import LanguageCode, ProgrammingLanguage
@@ -23,7 +24,7 @@ class DocPackage(DocPackageBase):
     """Represents a Documentation Package."""
 
     id: int
-    # sources: list["DocSource"]
+    sources: list["DocSource"]
 
     class Config:
         orm_mode = True
