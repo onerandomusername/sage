@@ -139,13 +139,6 @@ jobs:
       - name: Checks out repository
         uses: actions/checkout@v3
 
-      # Set up the right version of Python
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
-        id: python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
       # This step caches our Python dependencies. To make sure we
       # only restore a cache when the dependencies, the python version,
       # the runner operating system, and the dependency location haven't
