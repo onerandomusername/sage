@@ -21,8 +21,25 @@ from sage.core.dependencies import GET_SESSION
 
 router = APIRouter(prefix="/docs", tags=["documentation"])
 
+common_package_responses: dict[str | int, dict[str, Any]] = {
+    404: {
+        "description": "The package could not be found.",
+        "content": {
+            "application/json": {"message": {"detail": "No package with id '0' was found."}}
+        },
+    }
+}
+common_source_responses: dict[str | int, dict[str, Any]] = {
+    404: {
+        "description": "The source could not be found.",
+        "content": {
+            "application/json": {"message": {"detail": "No source with id '0' was found."}}
+        },
+    }
+}
 
-@router.get("/packages", name="Get all packages")
+
+@router.get("/packages", name="Get all packages", responses=common_package_responses)
 async def get_root(db: AsyncSession = GET_SESSION) -> list[dict[str, Any]]:
     """Return all supported documentation inventories."""
     db_packages = await get_all_doc_packages(db)
@@ -33,7 +50,12 @@ async def get_root(db: AsyncSession = GET_SESSION) -> list[dict[str, Any]]:
 
 
 # todo: add Depends/middleware to make this admin only
-@router.post("/packages", response_model=schemas.DocPackage, name="Create a package")
+@router.post(
+    "/packages",
+    response_model=schemas.DocPackage,
+    name="Create a package",
+    responses=common_package_responses,
+)
 async def post_root(
     package: schemas.DocPackageCreationRequest, db: AsyncSession = GET_SESSION
 ) -> schemas.DocPackage:
@@ -45,6 +67,7 @@ async def post_root(
 @router.get(
     "/packages/{package_id}",
     name="Get an existing Documentation Package.",
+    responses=common_package_responses,
 )
 async def get_package(
     package_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
@@ -61,6 +84,7 @@ async def get_package(
     "/packages/{package_id}",
     response_model=schemas.DocPackage,
     name="Modify an existing DocPackage",
+    responses=common_package_responses,
 )
 async def modify_package(
     package: schemas.DocPackagePatchRequest,
@@ -77,11 +101,8 @@ async def modify_package(
     "/packages/{package_id}",
     name="Delete a package.",
     responses={
+        **common_package_responses,
         204: {"description": "Package deletion was a success"},
-        404: {
-            "description": "The package could not be found.",
-            "content": {"message": {"detail": "No package with id '0' was found."}},
-        },
     },
 )
 async def delete_package(
@@ -92,7 +113,9 @@ async def delete_package(
     return
 
 
-@router.get("/packages/{package_id}/sources", name="Get package sources")
+@router.get(
+    "/packages/{package_id}/sources", name="Get package sources", responses=common_source_responses
+)
 async def get_package_sources(
     package_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
 ) -> list[models.DocSource]:
@@ -101,7 +124,7 @@ async def get_package_sources(
     return db_sources
 
 
-@router.post("/sources", name="create a new package source")
+@router.post("/sources", name="create a new package source", responses=common_source_responses)
 async def create_package_source(
     source: schemas.DocSourceCreationRequest, db: AsyncSession = GET_SESSION
 ) -> models.DocSource:
@@ -110,7 +133,7 @@ async def create_package_source(
     return db_source
 
 
-@router.get("/sources/{source_id}")
+@router.get("/sources/{source_id}", responses=common_source_responses)
 async def show_source(
     source_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
 ) -> dict[str, Any]:
@@ -121,7 +144,7 @@ async def show_source(
     return resp.to_dict(include_package=True)
 
 
-@router.patch("/sources/{source_id}")
+@router.patch("/sources/{source_id}", responses=common_source_responses)
 async def modify_source(
     source: schemas.DocSourcePatchRequest,
     source_id: int = Path(ge=0, lt=1 << 31),  # noqa: B008
@@ -132,7 +155,13 @@ async def modify_source(
     return new_source
 
 
-@router.delete("/sources/{source_id}", status_code=204)
+@router.delete(
+    "/sources/{source_id}",
+    responses={
+        **common_source_responses,
+        204: {"description": "Source deletion was a success"},
+    },
+)
 async def delete_source(
     source_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
 ) -> None:
