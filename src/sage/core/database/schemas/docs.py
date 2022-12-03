@@ -1,6 +1,8 @@
 """Pydantic Schemas for sage.core.database.models.docs."""
 
 
+from typing import Annotated
+
 from pydantic import BaseModel, Field, HttpUrl
 
 from sage.enums import LanguageCode, ProgrammingLanguage
@@ -15,7 +17,7 @@ __all__ = (
 
 
 class DocPackageBase(BaseModel):  # noqa: D101
-    name: str
+    name: str = Field(min_length=0, max_length=100, regex="^[a-z0-9A-Z.-_]+$")
     homepage: HttpUrl | None = None
     programming_language: ProgrammingLanguage
 
@@ -27,6 +29,7 @@ class DocPackage(DocPackageBase):
     sources: list["DocSource"]
 
     class Config:
+
         orm_mode = True
         schema_extra = {
             "example": {
@@ -40,29 +43,6 @@ class DocPackage(DocPackageBase):
                         "preview": False,
                         "version": "2.7.0",
                         "language_code": LanguageCode.en_GB,
-                    }
-                ],
-            }
-        }
-
-
-class DocPackageCreationRequest(DocPackageBase):
-    """Payload structure to create a DocPackage."""
-
-    # at least one source must be provided to create a package
-    sources: list["DocSourceCreationWithinDocPackageCreationRequest"]
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "name": "disnake",
-                "homepage": "https://disnake.dev/",
-                "programming_language": ProgrammingLanguage.python,
-                "sources": [
-                    {
-                        "inventory_url": "https://docs.disnake.dev/en/stable/objects.inv",
-                        "language_code": LanguageCode.en_GB,
-                        "version": "2.7.0",
                     }
                 ],
             }
@@ -103,7 +83,7 @@ class DocSource(DocSourceBase):
     id: int = Field(ge=0, lt=1 << 31)
     package: DocPackage
     preview: bool
-    version: str
+    version: str = Field(regex="^[a-z0-9A-Z.-_]+$")
 
     class Config:
         orm_mode = True
@@ -150,5 +130,29 @@ class DocSourceCreationWithinDocPackageCreationRequest(DocSourceBase):  # noqa: 
         }
 
 
+class DocPackageCreationRequest(DocPackageBase):
+    """Payload structure to create a DocPackage."""
+
+    # at least one source must be provided to create a package
+    sources: Annotated[list[DocSourceCreationWithinDocPackageCreationRequest], Field(min_items=1)]
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "name": "disnake",
+                "homepage": "https://disnake.dev/",
+                "programming_language": ProgrammingLanguage.python,
+                "sources": [
+                    {
+                        "inventory_url": "https://docs.disnake.dev/en/stable/objects.inv",
+                        "language_code": LanguageCode.en_GB,
+                        "version": "2.7.0",
+                    }
+                ],
+            }
+        }
+
+
 DocPackage.update_forward_refs()
 DocPackageCreationRequest.update_forward_refs()
+DocSourceCreationWithinDocPackageCreationRequest.update_forward_refs()

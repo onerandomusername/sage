@@ -52,16 +52,18 @@ async def get_root(db: AsyncSession = GET_SESSION) -> list[dict[str, Any]]:
 # todo: add Depends/middleware to make this admin only
 @router.post(
     "/packages",
-    response_model=schemas.DocPackage,
+    # response_model=schemas.DocPackage,
+    # response_model_exclude={"sources": {"__all__": {"package"}}},
     name="Create a package",
-    responses=common_package_responses,
+    status_code=201,
+    responses={**common_package_responses, 201: {"description": "Package successfully created"}},
 )
 async def post_root(
     package: schemas.DocPackageCreationRequest, db: AsyncSession = GET_SESSION
-) -> schemas.DocPackage:
+) -> dict[str, Any]:
     """Add a new package to the documentation index."""
-    resp = await create_doc_package(db, package)
-    return schemas.DocPackage.from_orm(resp)
+    db_package = await create_doc_package(db, package)
+    return db_package.to_dict(include_sources=True)
 
 
 @router.get(
@@ -76,13 +78,13 @@ async def get_package(
     resp = await get_doc_package(db, package_id)
     if resp is None:
         raise HTTPException(404, "Package could not be found.")
-    return resp.to_json(include_sources=True)
+    return resp.to_dict(include_sources=True)
 
 
 # todo: add Depends/middleware to make this admin only
 @router.patch(
     "/packages/{package_id}",
-    response_model=schemas.DocPackage,
+    # response_model=schemas.DocPackage,
     name="Modify an existing DocPackage",
     responses=common_package_responses,
 )
@@ -90,10 +92,10 @@ async def modify_package(
     package: schemas.DocPackagePatchRequest,
     package_id: int = Path(ge=0, lt=1 << 31),  # noqa: B008
     db: AsyncSession = GET_SESSION,
-) -> schemas.DocPackage:
+) -> dict[str, Any]:
     """Modify an existing Package. The full package must be provided."""
     resp = await modify_doc_package(db, package_id, package)
-    return schemas.DocPackage.from_orm(resp)
+    return resp.to_dict(include_sources=False)
 
 
 # todo: add Depends/middleware to prevent anyone from creating a package
@@ -124,7 +126,15 @@ async def get_package_sources(
     return db_sources
 
 
-@router.post("/sources", name="create a new package source", responses=common_source_responses)
+@router.post(
+    "/sources",
+    name="create a new package source",
+    responses={
+        **common_source_responses,
+        400: {"description": "The documentation package does not exist."},
+    },
+    status_code=201,
+)
 async def create_package_source(
     source: schemas.DocSourceCreationRequest, db: AsyncSession = GET_SESSION
 ) -> models.DocSource:

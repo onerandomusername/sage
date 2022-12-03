@@ -27,7 +27,7 @@ class DocPackage(Base):
 
     def to_dict(self, include_sources: bool = False) -> dict[str, Any]:
         """Convert the package to a dict representation which is ready for json serialisation."""
-        resp = {
+        resp: dict[str, Any] = {
             "id": self.id,
             "name": self.name,
             "homepage": self.homepage,
@@ -35,7 +35,7 @@ class DocPackage(Base):
         }
         if include_sources:
             # note: this requires await or cached
-            resp["sources"] = self.sources
+            resp["sources"] = [source.to_dict(include_package=False) for source in self.sources]
         return resp
 
 

@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy import delete, update
 from sqlalchemy.engine import CursorResult
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -9,16 +10,18 @@ from sage.core.database import models, schemas
 
 
 async def get_doc_package(
-    db: AsyncSession, id: int, include_sources: bool = False
+    db: AsyncSession, id: int, *, include_sources: bool = False
 ) -> models.DocPackage | None:
     """Get the docs by their primary key."""
-    resp = (
-        await db.execute(
-            select(models.DocPackage)
-            .options(selectinload(models.DocPackage.sources))
-            .where(models.DocPackage.id == id)
-        )
-    ).one()
+    stmt = (
+        select(models.DocPackage)
+        .options(selectinload(models.DocPackage.sources))
+        .where(models.DocPackage.id == id)
+    )
+    try:
+        resp = (await db.execute(stmt)).one()
+    except NoResultFound:
+        return None
     if resp and len(resp) == 1:
         return resp[0]
     return resp
@@ -116,13 +119,15 @@ async def delete_doc_package(
 
 async def get_doc_source(db: AsyncSession, id: int) -> models.DocSource | None:
     """Get a source by id."""
-    resp = (
-        await db.execute(
-            select(models.DocSource)
-            .options(selectinload(models.DocSource.package))
-            .where(models.DocSource.id == id)
-        )
-    ).one()
+    stmt = (
+        select(models.DocSource)
+        .options(selectinload(models.DocSource.package))
+        .where(models.DocSource.id == id)
+    )
+    try:
+        resp = (await db.execute(stmt)).one()
+    except NoResultFound:
+        return None
     if resp and len(resp) == 1:
         return resp[0]
     return resp
@@ -143,7 +148,13 @@ async def create_doc_source(
 ) -> models.DocPackage:
     """Create a documentation source using the package_id provided in the request."""
     package_id = doc_source.package_id
+
     async with db.begin():
+        # validate the package exists
+        doc_package = await get_doc_package(db, package_id)
+        if not doc_package:
+            raise HTTPException(400, "documentation package does not exist")
+
         human_friendly_url = doc_source.inventory_url.removesuffix("/objects.inv")
 
         db_doc_source = models.DocSource(
