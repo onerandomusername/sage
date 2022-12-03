@@ -39,8 +39,7 @@ async def get_all_doc_packages(db: AsyncSession) -> list[models.DocPackage]:
     """Fetch *all* documentation packages from the database."""
     resp = (await db.execute(select(models.DocPackage))).all()
     if not resp:
-        # todo: make more specific
-        raise Exception
+        return []
     return [row[0] for row in resp]
 
 
@@ -138,8 +137,7 @@ async def get_all_sources_for_package(db: AsyncSession, package_id: int) -> list
     stmt = select(models.DocSource).where(models.DocSource.package_id == package_id)
     resp = await db.execute(stmt)
     if not resp:
-        # todo: make more specific
-        raise Exception
+        return []
     return [row[0] for row in resp]
 
 
