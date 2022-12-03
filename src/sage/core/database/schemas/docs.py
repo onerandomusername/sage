@@ -113,7 +113,7 @@ class DocSourcePatchRequest(DocSourceBase):
     """Required parameters to change a documentation source."""
 
     preview: bool | None = None
-    version: str | None = None
+    version: str | None = Field(regex="^[0-9a-zA-Z-.]$")
 
 
 # this name is ridiculous.
