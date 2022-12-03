@@ -46,7 +46,10 @@ class DocSource(Base):
 
     id = Column(Integer, primary_key=True)
     package = relationship("DocPackage", back_populates="sources")
-    package_id = Column(Integer, ForeignKey("doc_packages.id", ondelete="CASCADE"))
+    package_id = Column(
+        Integer,
+        ForeignKey("doc_packages.id", ondelete="CASCADE", name="doc_sources_package_id_fkey"),
+    )
     preview = Column(Boolean, default=True, nullable=False)
     inventory_url = Column(String(250), nullable=True)
     human_friendly_url = Column(String(250), nullable=False)
