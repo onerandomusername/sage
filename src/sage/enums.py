@@ -4,7 +4,7 @@ import enum
 __all__ = ("ProgrammingLanguage", "LanguageCode")
 
 
-class ProgrammingLanguage(enum.Enum):
+class ProgrammingLanguage(str, enum.Enum):
     """Supported programming languages."""
 
     python = "python"
@@ -12,7 +12,7 @@ class ProgrammingLanguage(enum.Enum):
     other = "other"
 
 
-class LanguageCode(enum.Enum):
+class LanguageCode(str, enum.Enum):
     """Supported languages for i18n."""
 
     bg = "bg"
