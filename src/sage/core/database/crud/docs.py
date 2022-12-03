@@ -61,7 +61,7 @@ async def create_doc_package(
                     inventory_url=source.inventory_url,
                     version=source.version,
                     human_friendly_url=human_friendly_url,
-                    language_code=source.language,
+                    language_code=source.language_code,
                 ),
             )
         db.add(db_doc_package, True)
@@ -151,7 +151,7 @@ async def create_doc_source(
             inventory_url=doc_source.inventory_url,
             version=doc_source.version,
             human_friendly_url=human_friendly_url,
-            language_code=doc_source.language,
+            language_code=doc_source.language_code,
         )
         db.add(db_doc_source, True)
         await db.commit()

@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sage.core.database import models, schemas
@@ -46,7 +46,9 @@ async def post_root(
     "/packages/{package_id}",
     name="Get an existing Documentation Package.",
 )
-async def get_package(package_id: int, db: AsyncSession = GET_SESSION) -> dict[str, Any]:
+async def get_package(
+    package_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
+) -> dict[str, Any]:
     """Get an existing documentation package by ID."""
     resp = await get_doc_package(db, package_id)
     if resp is None:
@@ -61,8 +63,8 @@ async def get_package(package_id: int, db: AsyncSession = GET_SESSION) -> dict[s
     name="Modify an existing DocPackage",
 )
 async def modify_package(
-    package_id: int,
     package: schemas.DocPackagePatchRequest,
+    package_id: int = Path(ge=0, lt=1 << 31),  # noqa: B008
     db: AsyncSession = GET_SESSION,
 ) -> schemas.DocPackage:
     """Modify an existing Package. The full package must be provided."""
@@ -71,8 +73,20 @@ async def modify_package(
 
 
 # todo: add Depends/middleware to prevent anyone from creating a package
-@router.delete("/packages/{package_id}", name="Delete a package.", status_code=204)
-async def delete_package(package_id: int, db: AsyncSession = GET_SESSION) -> None:
+@router.delete(
+    "/packages/{package_id}",
+    name="Delete a package.",
+    responses={
+        204: {"description": "Package deletion was a success"},
+        404: {
+            "description": "The package could not be found.",
+            "content": {"message": {"detail": "No package with id '0' was found."}},
+        },
+    },
+)
+async def delete_package(
+    package_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
+) -> None:
     """Delete an existing package. This cannot be undone."""
     await delete_doc_package(db, package_id)
     return
@@ -80,7 +94,7 @@ async def delete_package(package_id: int, db: AsyncSession = GET_SESSION) -> Non
 
 @router.get("/packages/{package_id}/sources", name="Get package sources")
 async def get_package_sources(
-    package_id: int, db: AsyncSession = GET_SESSION
+    package_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
 ) -> list[models.DocSource]:
     """Show all sources for a specific package."""
     db_sources = await get_all_sources_for_package(db, package_id)
@@ -97,7 +111,9 @@ async def create_package_source(
 
 
 @router.get("/sources/{source_id}")
-async def show_source(source_id: int, db: AsyncSession = GET_SESSION) -> dict[str, Any]:
+async def show_source(
+    source_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
+) -> dict[str, Any]:
     """Get information on the provided source number."""
     resp = await get_doc_source(db, source_id)
     if not resp:
@@ -107,7 +123,9 @@ async def show_source(source_id: int, db: AsyncSession = GET_SESSION) -> dict[st
 
 @router.patch("/sources/{source_id}")
 async def modify_source(
-    source_id: int, source: schemas.DocSourcePatchRequest, db: AsyncSession = GET_SESSION
+    source: schemas.DocSourcePatchRequest,
+    source_id: int = Path(ge=0, lt=1 << 31),  # noqa: B008
+    db: AsyncSession = GET_SESSION,
 ) -> schemas.DocSource:
     """Modify the provided source. This will fully replace the last source."""
     new_source = await modify_doc_source(db, source_id, source)
@@ -115,7 +133,9 @@ async def modify_source(
 
 
 @router.delete("/sources/{source_id}", status_code=204)
-async def delete_source(source_id: int, db: AsyncSession = GET_SESSION) -> None:
+async def delete_source(
+    source_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
+) -> None:
     """Delete the provided source by ID."""
     await delete_doc_source(db, source_id)
     return

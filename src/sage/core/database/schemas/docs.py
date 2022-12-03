@@ -1,7 +1,7 @@
 """Pydantic Schemas for sage.core.database.models.docs."""
 
 
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl
 
 from sage.enums import LanguageCode, ProgrammingLanguage
 
@@ -23,7 +23,7 @@ class DocPackageBase(BaseModel):  # noqa: D101
 class DocPackage(DocPackageBase):
     """Represents a Documentation Package."""
 
-    id: int
+    id: int = Field(ge=0, lt=1 << 31)
     sources: list["DocSource"]
 
     class Config:
@@ -61,7 +61,7 @@ class DocPackageCreationRequest(DocPackageBase):
                 "sources": [
                     {
                         "inventory_url": "https://docs.disnake.dev/en/stable/objects.inv",
-                        "language": LanguageCode.en_GB,
+                        "language_code": LanguageCode.en_GB,
                         "version": "2.7.0",
                     }
                 ],
@@ -94,13 +94,13 @@ class DocPackagePatchRequest(DocPackageBase):
 
 class DocSourceBase(BaseModel):  # noqa: D101
     inventory_url: HttpUrl
-    language: LanguageCode
+    language_code: LanguageCode
 
 
 class DocSource(DocSourceBase):
     """Documentation Source for a Documentation Package."""
 
-    id: int
+    id: int = Field(ge=0, lt=1 << 31)
     package: DocPackage
     preview: bool
     version: str
@@ -120,7 +120,7 @@ class DocSource(DocSourceBase):
 class DocSourceCreationRequest(DocSourceBase):
     """Necessary arguments to creation a Documentation Source."""
 
-    package_id: int  # this might be a path arg, unsure
+    package_id: int = Field(ge=0, lt=1 << 31)  # this might be a path arg, unsure
     version: str | None = None
 
     class Config:
