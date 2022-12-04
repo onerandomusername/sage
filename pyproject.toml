@@ -20,6 +20,7 @@ celery = "^5.2.7"
 coloredlogs = "^15.0.1"
 fastapi = "^0.87.0"
 python = "^3.10"
+python-multipart = "^0.0.5"
 sqlalchemy = {extras = ["postgresql-asyncpg"], version = "^1.4.43"}
 tomli = "^2.0.1"
 uvicorn = {extras = ["standard"], version = "^0.19.0"}
@@ -140,4 +141,6 @@ typeCheckingMode = "basic"
 [tool.pytest.ini_options]
 env = [
   "D:SAGE_DATABASE_BIND=postgresql+asyncpg://sage:localhost@postgres:5432/sage",
+  "SAGE_ADMIN_USERNAME=admin",
+  "SAGE_ADMIN_PASSWORD=password",
 ]
