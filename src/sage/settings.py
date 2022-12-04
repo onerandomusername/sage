@@ -1,4 +1,4 @@
-from pydantic import BaseSettings, Field, PostgresDsn
+from pydantic import BaseSettings, Field, PostgresDsn, SecretBytes
 
 
 __all__ = ("Settings", "get_settings")
@@ -10,11 +10,22 @@ class AsyncPostgresDsn(PostgresDsn):  # noqa: D101
     }
 
 
+class AdminSettings(BaseSettings):
+    """Admin account settings."""
+
+    username: bytes
+    password: SecretBytes
+
+    class Config:  # noqa: D106
+        env_prefix = "SAGE_ADMIN_"
+
+
 class Settings(BaseSettings):
     """The main configuration for Sage."""
 
     database_bind: AsyncPostgresDsn = Field(env="SAGE_DATABASE_BIND")
     debug: bool = False
+    admin: AdminSettings = AdminSettings()  # type: ignore # these are filled by env vars
 
     class Config:  # noqa: D106
         env_prefix = "SAGE_"
