@@ -16,7 +16,7 @@ from sage.core.database.crud.docs import (
     modify_doc_package,
     modify_doc_source,
 )
-from sage.core.dependencies import GET_SESSION
+from sage.core.dependencies import GET_SESSION, REQUIRE_ADMIN
 
 
 router = APIRouter(prefix="/docs", tags=["documentation"])
@@ -38,6 +38,14 @@ common_source_responses: dict[str | int, dict[str, Any]] = {
     }
 }
 
+bad_authorisation_responses: dict[str | int, dict[str, Any]] = {
+    401: {
+        "description": "Bad authorisation.",
+        "content": {"application/json": {"message": {"detail": "Incorrect username or password"}}},
+        "headers": {"WWW-Authenticate": "Basic"},
+    }
+}
+
 
 @router.get("/packages", name="Get all packages", responses=common_package_responses)
 async def get_root(db: AsyncSession = GET_SESSION) -> list[dict[str, Any]]:
@@ -49,14 +57,18 @@ async def get_root(db: AsyncSession = GET_SESSION) -> list[dict[str, Any]]:
     return packages
 
 
-# todo: add Depends/middleware to make this admin only
 @router.post(
     "/packages",
     # response_model=schemas.DocPackage,
     # response_model_exclude={"sources": {"__all__": {"package"}}},
     name="Create a package",
     status_code=201,
-    responses={**common_package_responses, 201: {"description": "Package successfully created"}},
+    responses={
+        **common_package_responses,
+        **bad_authorisation_responses,
+        201: {"description": "Package successfully created"},
+    },
+    dependencies=[REQUIRE_ADMIN],
 )
 async def post_root(
     package: schemas.DocPackageCreationRequest, db: AsyncSession = GET_SESSION
@@ -81,12 +93,12 @@ async def get_package(
     return resp.to_dict(include_sources=True)
 
 
-# todo: add Depends/middleware to make this admin only
 @router.patch(
     "/packages/{package_id}",
     # response_model=schemas.DocPackage,
     name="Modify an existing DocPackage",
-    responses=common_package_responses,
+    responses={**common_package_responses, **bad_authorisation_responses},
+    dependencies=[REQUIRE_ADMIN],
 )
 async def modify_package(
     package: schemas.DocPackagePatchRequest,
@@ -98,14 +110,15 @@ async def modify_package(
     return resp.to_dict(include_sources=False)
 
 
-# todo: add Depends/middleware to prevent anyone from creating a package
 @router.delete(
     "/packages/{package_id}",
     name="Delete a package.",
     responses={
         **common_package_responses,
+        **bad_authorisation_responses,
         204: {"description": "Package deletion was a success"},
     },
+    dependencies=[REQUIRE_ADMIN],
 )
 async def delete_package(
     package_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
@@ -116,7 +129,9 @@ async def delete_package(
 
 
 @router.get(
-    "/packages/{package_id}/sources", name="Get package sources", responses=common_source_responses
+    "/packages/{package_id}/sources",
+    name="Get package sources",
+    responses=common_source_responses,
 )
 async def get_package_sources(
     package_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
@@ -131,9 +146,11 @@ async def get_package_sources(
     name="create a new package source",
     responses={
         **common_source_responses,
+        **bad_authorisation_responses,
         400: {"description": "The documentation package does not exist."},
     },
     status_code=201,
+    dependencies=[REQUIRE_ADMIN],
 )
 async def create_package_source(
     source: schemas.DocSourceCreationRequest, db: AsyncSession = GET_SESSION
@@ -154,7 +171,11 @@ async def show_source(
     return resp.to_dict(include_package=True)
 
 
-@router.patch("/sources/{source_id}", responses=common_source_responses)
+@router.patch(
+    "/sources/{source_id}",
+    responses={**common_source_responses, **bad_authorisation_responses},
+    dependencies=[REQUIRE_ADMIN],
+)
 async def modify_source(
     source: schemas.DocSourcePatchRequest,
     source_id: int = Path(ge=0, lt=1 << 31),  # noqa: B008
@@ -169,8 +190,10 @@ async def modify_source(
     "/sources/{source_id}",
     responses={
         **common_source_responses,
+        **bad_authorisation_responses,
         204: {"description": "Source deletion was a success"},
     },
+    dependencies=[REQUIRE_ADMIN],
 )
 async def delete_source(
     source_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
