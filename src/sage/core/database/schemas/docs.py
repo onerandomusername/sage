@@ -82,6 +82,7 @@ class DocSource(DocSourceBase):
 
     id: int = Field(ge=0, lt=1 << 31)
     package: DocPackage
+    default: bool
     preview: bool
     version: str = Field(regex="^[a-z0-9A-Z.-_]+$")
 
@@ -91,6 +92,7 @@ class DocSource(DocSourceBase):
             "example": {
                 "name": "disnake",
                 "package": DocPackage.Config.schema_extra["example"].copy(),
+                "inventory_url": "https://docs.disnake.dev/en/v2.7.0/objects.inv",
                 "preview": False,
                 "version": "2.7.0",
             }
@@ -101,11 +103,18 @@ class DocSourceCreationRequest(DocSourceBase):
     """Necessary arguments to creation a Documentation Source."""
 
     package_id: int = Field(ge=0, lt=1 << 31)  # this might be a path arg, unsure
+    default: bool = False
     version: str | None = None
 
     class Config:
         schema_extra = {
-            "example": DocSource.Config.schema_extra["example"],
+            "example": {
+                "inventory_url": "https://docs.disnake.dev/en/v2.7.0/objects.inv",
+                "version": "2.7.0",
+                "package_id": 12,
+                "default": False,
+                "language_code": LanguageCode.en_US,
+            },
         }
 
 
@@ -117,9 +126,9 @@ class DocSourcePatchRequest(DocSourceBase):
 
 
 # this name is ridiculous.
-# additionally, we currently don't expose documentation sources anywhere
 class DocSourceCreationWithinDocPackageCreationRequest(DocSourceBase):  # noqa: D101
     version: str | None = None
+    default: bool = False
 
     class Config:
         schema_extra = {

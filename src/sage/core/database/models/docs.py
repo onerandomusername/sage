@@ -1,6 +1,6 @@
 from typing import Any
 
-from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, Enum, ForeignKey, Index, Integer, String, text
 from sqlalchemy.orm import relationship
 
 from sage.core.database.models.base import Base
@@ -43,14 +43,26 @@ class DocSource(Base):
     """Represents a documentation source for a specific version/language of a DocPackage."""
 
     __tablename__ = "doc_sources"
+    __table_args__ = (
+        Index(
+            "ix_doc_source_defaults",
+            "package_id",
+            "default",
+            text("default = true"),
+            unique=True,
+            postgresql_where=Column("default"),
+        ),
+    )
 
     id = Column(Integer, primary_key=True)
     package = relationship("DocPackage", back_populates="sources")
     package_id = Column(
         Integer,
         ForeignKey("doc_packages.id", ondelete="CASCADE", name="doc_sources_package_id_fkey"),
+        nullable=False,
     )
-    preview = Column(Boolean, default=True, nullable=False)
+    preview = Column(Boolean, default=False, nullable=False)
+    default = Column(Boolean, default=False, nullable=False)
     inventory_url = Column(String(250), nullable=True)
     human_friendly_url = Column(String(250), nullable=False)
     version = Column(String(30), nullable=True)

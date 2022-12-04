@@ -1,8 +1,8 @@
 """add v1 documentation and source tables
 
-Revision ID: 93cd421d3302
+Revision ID: 29dc63185dba
 Revises:
-Create Date: 2022-12-02 20:17:19.223346
+Create Date: 2022-12-03 22:16:39.328300
 
 """
 import sqlalchemy as sa
@@ -10,7 +10,7 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = "93cd421d3302"
+revision = "29dc63185dba"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -68,16 +68,17 @@ def upgrade() -> None:
             programming_language_enum,
             nullable=False,
         ),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_doc_packages")),
     )
     op.create_table(
         "doc_sources",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("package_id", sa.Integer(), nullable=True),
+        sa.Column("package_id", sa.Integer(), nullable=False),
+        sa.Column("version", sa.String(length=30), nullable=True),
+        sa.Column("default", sa.Boolean(), nullable=False),
         sa.Column("preview", sa.Boolean(), nullable=False),
         sa.Column("inventory_url", sa.String(length=250), nullable=True),
         sa.Column("human_friendly_url", sa.String(length=250), nullable=False),
-        sa.Column("version", sa.String(length=30), nullable=True),
         sa.Column(
             "language_code",
             language_code_enum,
@@ -89,9 +90,18 @@ def upgrade() -> None:
             name="doc_sources_package_id_fkey",
             ondelete="CASCADE",
         ),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_doc_sources")),
     )
+
     # ### end Alembic commands ###
+
+    op.create_index(
+        "ix_doc_source_defaults",
+        "doc_sources",
+        ["package_id", "default"],
+        unique=True,
+        postgresql_where=sa.Column("default"),
+    )
 
 
 def downgrade() -> None:

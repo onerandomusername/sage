@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from sqlalchemy import delete, update
+from sqlalchemy import and_, delete, update
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -52,20 +52,31 @@ async def create_doc_package(
         homepage=str(doc_package.homepage),
         programming_language=doc_package.programming_language,
     )
+    default_source: models.DocSource | None = None
     async with db.begin():
         sources: list[models.DocSource] = []
         for source in doc_package.sources:
             # todo: use yarl for this and do validation elsewhere
             human_friendly_url = source.inventory_url.removesuffix("/objects.inv")
-            sources.append(
-                models.DocSource(
-                    package=db_doc_package,
-                    inventory_url=source.inventory_url,
-                    version=source.version,
-                    human_friendly_url=human_friendly_url,
-                    language_code=source.language_code,
-                ),
+            db_source_model = models.DocSource(
+                package=db_doc_package,
+                inventory_url=source.inventory_url,
+                version=source.version,
+                human_friendly_url=human_friendly_url,
+                language_code=source.language_code,
             )
+            if source.default:
+                if default_source is not None:
+                    raise HTTPException(400, "Only one source may be set as default.")
+                default_source = db_source_model
+
+            sources.append(db_source_model)
+        # add the default source if not already provided, we use the first source
+        if not sources:
+            raise HTTPException(400, "At least one source must be provided.")
+        if not default_source:
+            sources[0].default = True  # type: ignore
+
         db.add(db_doc_package, True)
         db.add_all(sources)
         await db.commit()
@@ -161,9 +172,27 @@ async def create_doc_source(
             version=doc_source.version,
             human_friendly_url=human_friendly_url,
             language_code=doc_source.language_code,
+            default=doc_source.default,
         )
+        if db_doc_source.default:
+            # assume there is another default and we need to change to this one as the default
+            stmt = select(models.DocSource).where(
+                and_(
+                    models.DocSource.package_id == package_id,
+                    models.DocSource.default == True,  # noqa: E712
+                )
+            )
+            result = await db.execute(stmt)
+            other_doc_source = result.one_or_none()
+            if other_doc_source:
+                other_doc_source = other_doc_source[0]
+                other_doc_source.default = False
+                db.add(other_doc_source)
+
         db.add(db_doc_source, True)
+
         await db.commit()
+
     return db_doc_source
 
 
