@@ -1,6 +1,6 @@
 from typing import Any
 
-from sqlalchemy import Boolean, Column, Enum, ForeignKey, Index, Integer, String, text
+from sqlalchemy import Boolean, Column, Enum, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import relationship
 
 from sage.core.database.models.base import Base
@@ -48,7 +48,6 @@ class DocSource(Base):
             "ix_doc_source_defaults",
             "package_id",
             "default",
-            text("default = true"),
             unique=True,
             postgresql_where=Column("default"),
         ),
