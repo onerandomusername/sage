@@ -4,18 +4,7 @@ from fastapi import APIRouter, HTTPException, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sage.core.database import models, schemas
-from sage.core.database.crud.docs import (
-    create_doc_package,
-    create_doc_source,
-    delete_doc_package,
-    delete_doc_source,
-    get_all_doc_packages,
-    get_all_sources_for_package,
-    get_doc_package,
-    get_doc_source,
-    modify_doc_package,
-    modify_doc_source,
-)
+from sage.core.database.crud import docs as crud_docs
 from sage.core.dependencies import GET_SESSION, REQUIRE_ADMIN
 
 
@@ -48,9 +37,9 @@ bad_authorisation_responses: dict[str | int, dict[str, Any]] = {
 
 
 @router.get("/packages", name="Get all packages", responses=common_package_responses)
-async def get_root(db: AsyncSession = GET_SESSION) -> list[dict[str, Any]]:
+async def get_all_doc_packages(db: AsyncSession = GET_SESSION) -> list[dict[str, Any]]:
     """Return all supported documentation inventories."""
-    db_packages = await get_all_doc_packages(db)
+    db_packages = await crud_docs.get_all_doc_packages(db)
     packages: list[dict[str, Any]] = []
     for package in db_packages:
         packages.append(package.to_dict())
@@ -70,11 +59,11 @@ async def get_root(db: AsyncSession = GET_SESSION) -> list[dict[str, Any]]:
     },
     dependencies=[REQUIRE_ADMIN],
 )
-async def post_root(
+async def create_doc_package(
     package: schemas.DocPackageCreationRequest, db: AsyncSession = GET_SESSION
 ) -> dict[str, Any]:
     """Add a new package to the documentation index."""
-    db_package = await create_doc_package(db, package)
+    db_package = await crud_docs.create_doc_package(db, package)
     return db_package.to_dict(include_sources=True)
 
 
@@ -83,11 +72,11 @@ async def post_root(
     name="Get an existing Documentation Package.",
     responses=common_package_responses,
 )
-async def get_package(
+async def get_doc_package(
     package_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
 ) -> dict[str, Any]:
     """Get an existing documentation package by ID."""
-    resp = await get_doc_package(db, package_id)
+    resp = await crud_docs.get_doc_package(db, package_id)
     if resp is None:
         raise HTTPException(404, "Package could not be found.")
     return resp.to_dict(include_sources=True)
@@ -100,13 +89,13 @@ async def get_package(
     responses={**common_package_responses, **bad_authorisation_responses},
     dependencies=[REQUIRE_ADMIN],
 )
-async def modify_package(
+async def edit_doc_package(
     package: schemas.DocPackagePatchRequest,
     package_id: int = Path(ge=0, lt=1 << 31),  # noqa: B008
     db: AsyncSession = GET_SESSION,
 ) -> dict[str, Any]:
     """Modify an existing Package. The full package must be provided."""
-    resp = await modify_doc_package(db, package_id, package)
+    resp = await crud_docs.modify_doc_package(db, package_id, package)
     return resp.to_dict(include_sources=False)
 
 
@@ -120,11 +109,11 @@ async def modify_package(
     },
     dependencies=[REQUIRE_ADMIN],
 )
-async def delete_package(
+async def delete_doc_package(
     package_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
 ) -> None:
     """Delete an existing package. This cannot be undone."""
-    await delete_doc_package(db, package_id)
+    await crud_docs.delete_doc_package(db, package_id)
     return
 
 
@@ -133,11 +122,11 @@ async def delete_package(
     name="Get package sources",
     responses=common_source_responses,
 )
-async def get_package_sources(
+async def get_doc_package_sources(
     package_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
 ) -> list[models.DocSource]:
     """Show all sources for a specific package."""
-    db_sources = await get_all_sources_for_package(db, package_id)
+    db_sources = await crud_docs.get_all_sources_for_package(db, package_id)
     return db_sources
 
 
@@ -152,20 +141,20 @@ async def get_package_sources(
     status_code=201,
     dependencies=[REQUIRE_ADMIN],
 )
-async def create_package_source(
+async def create_doc_package_source(
     source: schemas.DocSourceCreationRequest, db: AsyncSession = GET_SESSION
 ) -> models.DocSource:
     """Create a new source for a package."""
-    db_source = await create_doc_source(db, source)
+    db_source = await crud_docs.create_doc_source(db, source)
     return db_source
 
 
 @router.get("/sources/{source_id}", responses=common_source_responses)
-async def show_source(
+async def get_doc_package_source(
     source_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
 ) -> dict[str, Any]:
     """Get information on the provided source number."""
-    resp = await get_doc_source(db, source_id)
+    resp = await crud_docs.get_doc_source(db, source_id)
     if not resp:
         raise HTTPException(404, "The source could not be found.")
     return resp.to_dict(include_package=True)
@@ -176,13 +165,13 @@ async def show_source(
     responses={**common_source_responses, **bad_authorisation_responses},
     dependencies=[REQUIRE_ADMIN],
 )
-async def modify_source(
+async def edit_doc_package_source(
     source: schemas.DocSourcePatchRequest,
     source_id: int = Path(ge=0, lt=1 << 31),  # noqa: B008
     db: AsyncSession = GET_SESSION,
 ) -> schemas.DocSource:
     """Modify the provided source. This will fully replace the last source."""
-    new_source = await modify_doc_source(db, source_id, source)
+    new_source = await crud_docs.modify_doc_source(db, source_id, source)
     return new_source
 
 
@@ -195,11 +184,11 @@ async def modify_source(
     },
     dependencies=[REQUIRE_ADMIN],
 )
-async def delete_source(
+async def delete_doc_package_source(
     source_id: int = Path(ge=0, lt=1 << 31), db: AsyncSession = GET_SESSION  # noqa: B008
 ) -> None:
     """Delete the provided source by ID."""
-    await delete_doc_source(db, source_id)
+    await crud_docs.delete_doc_source(db, source_id)
     return
 
 
