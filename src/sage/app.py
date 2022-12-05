@@ -4,9 +4,11 @@ from starlette.responses import RedirectResponse
 
 from sage.endpoints import docs, meta
 from sage.logging import configure_logging
+from sage.settings import get_settings
 
 
 app = FastAPI(
+    debug=get_settings().debug,
     title="Sage",
     version="0.0.1",
     contact={
