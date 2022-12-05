@@ -37,12 +37,16 @@ bad_authorisation_responses: dict[str | int, dict[str, Any]] = {
 
 
 @router.get("/packages", name="Get all packages", responses=common_package_responses)
-async def get_all_doc_packages(db: AsyncSession = GET_SESSION) -> list[dict[str, Any]]:
+async def get_all_doc_packages(
+    db: AsyncSession = GET_SESSION,
+    *,
+    with_sources: bool = False,
+) -> list[dict[str, Any]]:
     """Return all supported documentation inventories."""
-    db_packages = await crud_docs.get_all_doc_packages(db)
+    db_packages = await crud_docs.get_all_doc_packages(db, with_sources=with_sources)
     packages: list[dict[str, Any]] = []
     for package in db_packages:
-        packages.append(package.to_dict())
+        packages.append(package.to_dict(include_sources=with_sources))
     return packages
 
 

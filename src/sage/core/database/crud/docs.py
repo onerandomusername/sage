@@ -4,7 +4,7 @@ from sqlalchemy.engine import CursorResult
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, subqueryload
 
 from sage.core.database import models, schemas
 
@@ -35,9 +35,16 @@ async def get_doc_package_by_name(db: AsyncSession, name: str) -> models.DocPack
     return resp
 
 
-async def get_all_doc_packages(db: AsyncSession) -> list[models.DocPackage]:
+async def get_all_doc_packages(
+    db: AsyncSession,
+    *,
+    with_sources: bool = False,
+) -> list[models.DocPackage]:
     """Fetch *all* documentation packages from the database."""
-    resp = (await db.execute(select(models.DocPackage))).all()
+    stmt = select(models.DocPackage)
+    if with_sources:
+        stmt = stmt.options(subqueryload(models.DocPackage.sources))
+    resp = (await db.execute(stmt)).all()
     if not resp:
         return []
     return [row[0] for row in resp]
