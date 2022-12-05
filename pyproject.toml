@@ -103,6 +103,7 @@ src = ['src']
 
 [tool.ruff.per-file-ignores]
 "src/sage/core/database/**.py" = ['D106']
+"src/sage/core/database/migrations/versions/**.py" = ['D']
 "tests/**.py" = ["S101"]
 
 [tool.ruff.isort]
