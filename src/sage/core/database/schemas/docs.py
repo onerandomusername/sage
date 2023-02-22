@@ -29,7 +29,6 @@ class DocPackage(DocPackageBase):
     sources: list["DocSource"]
 
     class Config:
-
         orm_mode = True
         schema_extra = {
             "example": {
