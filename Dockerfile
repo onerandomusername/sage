@@ -9,7 +9,7 @@ WORKDIR /sage
 # Install project dependencies
 
 RUN pip install -U pip wheel setuptools
-RUN pip install poetry==1.2.2
+RUN pip install poetry==1.3.2
 
 # export requirements after copying req files
 COPY pyproject.toml poetry.lock ./
