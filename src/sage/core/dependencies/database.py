@@ -3,20 +3,22 @@
 from typing import AsyncGenerator
 
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from sage.database import engine
 
 
-SessionLocal = sessionmaker(
-    bind=engine, expire_on_commit=False, autocommit=False, future=True, class_=AsyncSession
+SessionLocal = async_sessionmaker(
+    engine,
+    autocommit=False,
+    expire_on_commit=False,
+    class_=AsyncSession,
 )
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """Get the database to be used in a route callback."""
-    session: AsyncSession = SessionLocal()  # type: ignore
+    session = SessionLocal()
     try:
         yield session
     finally:

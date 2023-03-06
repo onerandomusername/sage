@@ -1,10 +1,10 @@
 from sqlalchemy import MetaData
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 
 
 __all__ = ("Base",)
 
-# https://docs.sqlalchemy.org/en/14/core/constraints.html#configuring-a-naming-convention-for-a-metadata-collection
+# https://docs.sqlalchemy.org/en/20/core/constraints.html#configuring-a-naming-convention-for-a-metadata-collection
 convention = {
     "ix": "ix_%(column_0_label)s",
     "uq": "uq_%(table_name)s_%(column_0_name)s",
@@ -15,4 +15,9 @@ convention = {
 
 
 metadata = MetaData(naming_convention=convention)
-Base = declarative_base(metadata=metadata)
+
+
+class Base(DeclarativeBase):
+    """Root metadata."""
+
+    metadata = metadata
