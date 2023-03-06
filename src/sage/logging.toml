@@ -14,17 +14,17 @@ stream = 'ext://sys.stdout'
 [loggers.sage]
 handlers = ['console']
 level = 'DEBUG'
-propagate = true
+propagate = false
 
 [loggers.uvicorn]
 handlers = ['console']
 level = 'INFO'
-propagate = true
+propagate = false
 
 [loggers.watchfiles]
 handlers = ['console']
 level = 'INFO'
-propagate = true
+propagate = false
 
 [root]
 handlers = ['console']
