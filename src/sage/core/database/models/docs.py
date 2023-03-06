@@ -16,7 +16,7 @@ class DocPackage(MappedAsDataclass, Base):
 
     __tablename__ = "doc_packages"
 
-    id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(sa.Integer, init=False, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(sa.String(100), nullable=False)
     homepage: Mapped[str] = mapped_column(
         sa.String(512), nullable=False
@@ -26,7 +26,9 @@ class DocPackage(MappedAsDataclass, Base):
     )
 
     sources: Mapped[list["DocSource"]] = relationship(
-        "DocSource", cascade="all, delete, delete-orphan"
+        "DocSource",
+        cascade="all, delete, delete-orphan",
+        default_factory=list,
     )
 
     def to_dict(self, include_sources: bool = False) -> dict[str, Any]:
@@ -84,5 +86,5 @@ class DocSource(Base):
         }
         if include_package:
             # note: this requires await or cached
-            resp["package"] = self.package
+            resp["package"] = self.package.to_dict(include_sources=False)
         return resp

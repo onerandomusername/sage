@@ -176,6 +176,7 @@ async def edit_doc_package_source(
 ) -> schemas.DocSource:
     """Modify the provided source. This will fully replace the last source."""
     new_source = await crud_docs.modify_doc_source(db, source_id, source)
+    new_source = schemas.DocSource.from_orm(new_source)
     return new_source
 
 

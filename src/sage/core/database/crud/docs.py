@@ -1,6 +1,5 @@
 from fastapi import HTTPException
 from sqlalchemy import and_, delete, update
-from sqlalchemy.engine import CursorResult
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -18,21 +17,15 @@ async def get_doc_package(
         .options(selectinload(models.DocPackage.sources))
         .where(models.DocPackage.id == id)
     )
-    try:
-        resp = (await db.execute(stmt)).one()
-    except NoResultFound:
-        return None
-    if resp and len(resp) == 1:
-        return resp[0]
-    return resp
+    result = await db.scalars(stmt)
+    return result.one_or_none()
 
 
 async def get_doc_package_by_name(db: AsyncSession, name: str) -> models.DocPackage | None:
     """Get the docs that match the provided name."""
-    resp = (await db.execute(select(models.DocPackage).where(models.DocPackage.name == name))).one()
-    if resp and len(resp) == 1:
-        return resp[0]
-    return resp
+    stmt = select(models.DocPackage).where(models.DocPackage.name == name)
+    result = await db.scalars(stmt)
+    return result.one_or_none()
 
 
 async def get_all_doc_packages(
@@ -99,18 +92,16 @@ async def modify_doc_package(
         .where(models.DocPackage.id == id)
         .values(**doc_package.dict(exclude_unset=True))
         .execution_options(synchronize_session="fetch")
+        .returning(models.DocPackage)
     )
     async with db.begin():
-        result: CursorResult = await db.execute(stmt)
-        if result.rowcount == 0:
-            raise HTTPException(status_code=404, detail=f"No package with id '{id}' was found.")
-        if result.rowcount != 1:
-            await db.rollback()
-            raise RuntimeError(
-                "updated more than one package based on primary key. This code is unreachable."
-            )
-        # fetch the new package
-        package = await get_doc_package(db, id)
+        result = await db.scalars(stmt)
+        try:
+            package = result.one()
+        except NoResultFound as e:
+            raise HTTPException(
+                status_code=404, detail=f"No package with id '{id}' was found."
+            ) from e
         await db.commit()
     return package
 
@@ -120,16 +111,15 @@ async def delete_doc_package(
     id: int,
 ) -> None:
     """Delete documentation package based on ID."""
-    stmt = delete(models.DocPackage).where(models.DocPackage.id == id)
+    stmt = delete(models.DocPackage).where(models.DocPackage.id == id).returning(models.DocPackage)
     async with db.begin():
-        result: CursorResult = await db.execute(stmt)
-        if result.rowcount == 0:
-            raise HTTPException(status_code=404, detail=f"No package with id '{id}' was found.")
-        if result.rowcount != 1:
-            await db.rollback()
-            raise RuntimeError(
-                "deleted more than one package based on primary key. This code is unreachable."
-            )
+        result = await db.execute(stmt)
+        try:
+            result.one()
+        except NoResultFound as e:
+            raise HTTPException(
+                status_code=404, detail=f"No package with id '{id}' was found."
+            ) from e
         await db.commit()
     return
 
@@ -141,27 +131,20 @@ async def get_doc_source(db: AsyncSession, id: int) -> models.DocSource | None:
         .options(selectinload(models.DocSource.package))
         .where(models.DocSource.id == id)
     )
-    try:
-        resp = (await db.execute(stmt)).one()
-    except NoResultFound:
-        return None
-    if resp and len(resp) == 1:
-        return resp[0]
+    resp = await db.scalar(stmt)
     return resp
 
 
 async def get_all_sources_for_package(db: AsyncSession, package_id: int) -> list[models.DocSource]:
     """Get all sources for a specific package."""
     stmt = select(models.DocSource).where(models.DocSource.package_id == package_id)
-    resp = await db.execute(stmt)
-    if not resp:
-        return []
-    return [row[0] for row in resp]
+    resp = await db.scalars(stmt)
+    return list(resp.all())
 
 
 async def create_doc_source(
     db: AsyncSession, doc_source: schemas.DocSourceCreationRequest
-) -> models.DocPackage:
+) -> models.DocSource:
     """Create a documentation source using the package_id provided in the request."""
     package_id = doc_source.package_id
 
@@ -205,26 +188,23 @@ async def create_doc_source(
 
 async def modify_doc_source(
     db: AsyncSession, id: int, doc_source: schemas.DocSourcePatchRequest
-) -> schemas.DocSource:
+) -> models.DocSource:
     """Modify the provided source."""
     stmt = (
         update(models.DocSource)
         .where(models.DocSource.id == id)
         .values(**doc_source.dict(exclude_unset=True))
+        .options(selectinload(models.DocSource.package))
+        .returning(models.DocSource)
         .execution_options(synchronize_session="fetch")
     )
     async with db.begin():
-        result: CursorResult = await db.execute(stmt)
-        if result.rowcount == 0:
+        source = await db.scalar(stmt)
+        if not source:
             raise HTTPException(status_code=404, detail=f"No source with id '{id}' was found.")
-        if result.rowcount != 1:
-            await db.rollback()
-            raise RuntimeError(
-                "updated more than one source based on primary key. This code is unreachable."
-            )
-        # fetch the new package
-        source = await get_doc_source(db, id)
         await db.commit()
+        source = await db.merge(source, options=[selectinload(models.DocSource.package)])
+
     return source
 
 
@@ -233,15 +213,14 @@ async def delete_doc_source(
     id: int,
 ) -> None:
     """Delete documentation source based on ID."""
-    stmt = delete(models.DocSource).where(models.DocSource.id == id)
+    stmt = delete(models.DocSource).where(models.DocSource.id == id).returning(models.DocSource)
     async with db.begin():
-        result: CursorResult = await db.execute(stmt)
-        if result.rowcount == 0:
-            raise HTTPException(status_code=404, detail=f"No source with id '{id}' was found.")
-        if result.rowcount != 1:
-            await db.rollback()
-            raise RuntimeError(
-                "deleted more than one source based on primary key. This code is unreachable."
-            )
+        result = await db.execute(stmt)
+        try:
+            result.one()
+        except NoResultFound as e:
+            raise HTTPException(
+                status_code=404, detail=f"No source with id '{id}' was found."
+            ) from e
         await db.commit()
     return
