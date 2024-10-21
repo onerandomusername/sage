@@ -1,6 +1,5 @@
 """Pydantic Schemas for sage.core.database.models.docs."""
 
-
 from typing import Annotated
 
 from pydantic import BaseModel, Field, HttpUrl
