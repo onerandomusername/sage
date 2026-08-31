@@ -6,7 +6,6 @@ from sqlalchemy.orm import relationship
 from sage.core.database.models.base import Base
 from sage.enums import LanguageCode, ProgrammingLanguage
 
-
 __all__ = ("DocPackage", "DocSource")
 
 

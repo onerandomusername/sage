@@ -7,7 +7,6 @@ from sage.core.database import models, schemas
 from sage.core.database.crud import docs as crud_docs
 from sage.core.dependencies import GET_SESSION, REQUIRE_ADMIN
 
-
 router = APIRouter(prefix="/docs", tags=["documentation"])
 
 common_package_responses: dict[str | int, dict[str, Any]] = {
