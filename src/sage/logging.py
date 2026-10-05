@@ -5,18 +5,15 @@ from typing import Any, overload
 
 import tomli
 
-
 DEFAULT_FILE = pathlib.Path(__file__).parent / "logging.toml"
 
 
 @overload
-def load_file(path: str | pathlib.Path, *, allow_not_exist: bool) -> dict[str, Any] | None:
-    ...
+def load_file(path: str | pathlib.Path, *, allow_not_exist: bool) -> dict[str, Any] | None: ...
 
 
 @overload
-def load_file(path: str | pathlib.Path, *, allow_not_exist: bool = False) -> dict[str, Any]:
-    ...
+def load_file(path: str | pathlib.Path, *, allow_not_exist: bool = False) -> dict[str, Any]: ...
 
 
 def load_file(path: str | pathlib.Path, *, allow_not_exist: bool = False) -> dict[str, Any] | None:
