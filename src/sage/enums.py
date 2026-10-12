@@ -1,6 +1,5 @@
 import enum
 
-
 __all__ = ("ProgrammingLanguage", "LanguageCode")
 
 
