@@ -4,7 +4,6 @@ from fastapi import APIRouter, FastAPI, Request
 
 from sage.core.models.meta import APIMetadata
 
-
 router = APIRouter(tags=["meta"])
 
 
