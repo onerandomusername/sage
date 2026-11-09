@@ -8,7 +8,6 @@ from sqlalchemy.orm import sessionmaker
 
 from sage.database import engine
 
-
 SessionLocal = sessionmaker(
     bind=engine, expire_on_commit=False, autocommit=False, future=True, class_=AsyncSession
 )
