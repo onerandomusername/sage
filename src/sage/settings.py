@@ -1,6 +1,5 @@
 from pydantic import BaseSettings, Field, PostgresDsn, SecretBytes
 
-
 __all__ = ("Settings", "get_settings")
 
 

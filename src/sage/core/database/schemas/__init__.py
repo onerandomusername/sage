@@ -7,7 +7,6 @@ from sage.core.database.schemas.docs import (
     DocSourcePatchRequest,
 )
 
-
 __all__ = (
     "DocPackage",
     "DocPackageCreationRequest",
