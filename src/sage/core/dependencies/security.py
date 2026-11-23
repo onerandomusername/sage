@@ -6,7 +6,6 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 from sage.settings import get_settings
 
-
 __all__ = ("REQUIRE_ADMIN",)
 
 
