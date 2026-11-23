@@ -1,12 +1,10 @@
 """Pydantic Schemas for sage.core.database.models.docs."""
 
-
 from typing import Annotated
 
 from pydantic import BaseModel, Field, HttpUrl
 
 from sage.enums import LanguageCode, ProgrammingLanguage
-
 
 __all__ = (
     "DocPackage",

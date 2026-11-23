@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from sage.core.database.models.base import Base
 from sage.settings import get_settings
 
-
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
